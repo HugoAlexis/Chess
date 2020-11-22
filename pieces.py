@@ -30,6 +30,7 @@ class Piece(Sprite, ABC):
 
         # If the move is selected by the player to make the move.
         self._selected = False
+        self.total_moves = 0
 
     @property
     def selected(self):
@@ -99,9 +100,37 @@ class Piece(Sprite, ABC):
             self.i = new_i
             self.j = new_j
             self._set_position()
+            self.total_moves += 1
+            self.selected = False
+            return True
+        else:
+            self.selected = False
+            return False
 
-        self.selected = False
+class King(Piece):
 
+    def __init__(self, color, pos, board):
+        super().__init__('king', color, pos, board)
+
+    def _val_piece_move(self, move):
+        move = [abs(move[0]),
+                abs(move[1])]
+        if 0 in move and 1 in move:
+            return True
+        else: 
+            return False
+
+class Queen(Piece):
+    def __init__(self, color, pos, board):
+        super().__init__('queen', color, pos, board)
+
+    def _val_piece_move(self, move):
+        if 0 in move:
+            return True
+        elif abs(move[0]) == abs(move[1]):
+            return True
+        else: 
+            return False 
 
 class Horse(Piece):
 
@@ -118,6 +147,28 @@ class Horse(Piece):
             return True
 
 
+class Rook(Piece):
+
+    def __init__(self, color, pos, board):
+        super().__init__('rook', color, pos, board)
+
+    def _val_piece_move(slef, move):
+        if 0 in move:
+            return True
+
+
+class Bishop(Piece):
+
+    def __init__(self, color, pos, board):
+        super().__init__('bishop', color, pos, board)
+
+    def _val_piece_move(slef, move):
+        if abs(move[0]) == abs(move[1]):
+            return True
+        else:
+            return False
+
+
 class Pawn(Piece):
 
     def __init__(self, color, pos, board):
@@ -128,5 +179,19 @@ class Pawn(Piece):
             Check if the move of the piece is correct, according to 
             the type of piece.
         """
-        if abs(move[0]) == abs(move[1]):
-            return True
+        if self.color == 'white':
+            if move[0] == 0:
+                if move[1] == -1:
+                    return True
+                elif move[1] == -2 and not self.total_moves:
+                    return True
+
+        elif self.color == 'black':
+            if move [0] == 0: 
+                if move[1] == 1:
+                    return True
+                elif move[1] == 2 and not self.total_moves:
+                    return True
+        return False
+
+
