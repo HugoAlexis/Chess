@@ -21,6 +21,11 @@ class Piece(Sprite, ABC):
         self.i = pos[0]
         self.j = pos[1]
 
+        if self.color == 'white':
+            self.key = 1
+        else: 
+            self.key = 2
+
         self.image_orig = pygame.image.load(f'images/{piece}_{color}.png')\
                                             .convert_alpha()
 
@@ -31,6 +36,10 @@ class Piece(Sprite, ABC):
         # If the move is selected by the player to make the move.
         self._selected = False
         self.total_moves = 0
+
+    @property
+    def position(self):
+        return (self.i, self.j)
 
     @property
     def selected(self):
@@ -87,7 +96,10 @@ class Piece(Sprite, ABC):
         """
         pass
 
-    def move_piece(self, new_i, new_j):
+    def _val_jumped(self, move, ocuppied):
+        return True
+
+    def move_piece(self, new_i, new_j, ocuppied):
         """
             Check if the desired move of the piece is valid.
             If so, move the piece to the new position, otherwise
@@ -96,7 +108,13 @@ class Piece(Sprite, ABC):
         move = [new_i - self.i,
                 new_j - self.j]
 
-        if self._val_piece_move(move) and self._val_in_board(new_i, new_j):
+        move_conditions = [any(move),
+                           self._val_piece_move(move),
+                           self._val_in_board(new_i, new_j),
+                           self._val_jumped(move, ocuppied),
+                        ]
+
+        if all(move_conditions):
             self.i = new_i
             self.j = new_j
             self._set_position()
@@ -115,7 +133,7 @@ class King(Piece):
     def _val_piece_move(self, move):
         move = [abs(move[0]),
                 abs(move[1])]
-        if 0 in move and 1 in move:
+        if move[0] in [0, 1] and move[1] in [0, 1]:
             return True
         else: 
             return False
@@ -131,6 +149,27 @@ class Queen(Piece):
             return True
         else: 
             return False 
+
+    def _val_jumped(self, move, ocuppied):
+
+        direction = []
+        for move_i in move:
+            if move_i != 0:
+                direction.append(move_i // abs(move_i))
+            else:
+                direction.append(0)
+        direction = direction[-1], direction[0]
+        displacament = max(abs(move[0]), abs(move[1]))
+
+        for n in range(1, displacament+1):
+            j = self.j + n * direction[0]
+            i = self.i + n * direction[1]
+            if n == displacament:
+                if int(ocuppied[j, i]) == self.key:
+                    return False
+            elif ocuppied[j, i]:
+                return False
+        return True
 
 class Horse(Piece):
 

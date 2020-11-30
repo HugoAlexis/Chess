@@ -3,60 +3,36 @@ import numpy as np
 from pygame.sprite import Sprite
 
 
-class MouseMarker():
-    """
-    Controlls the markers according tho the mouse
-    position.
-    """
-    def __init__(self, screen, board):
+class Board:
 
-        self.board = board
-        self.screen = screen
-
-        self.image = pygame.Surface((60, 60))
-        self.image.fill((0, 0, 0))
-        self.image.set_colorkey((0, 0, 0))
-        self.rect = self.image.get_rect()
-        self.rect.x = 0
-        self.rect.y = 0
-        
-    def update(self):
-        mouse_pos = pygame.mouse.get_pos()
-        if self.board.rect.collidepoint(mouse_pos):
-            self.mouse_in_board(mouse_pos)
-        else: 
-            self.image.fill((0, 0, 0))
-
-    def mouse_in_board(self, mouse_pos):
-        x = (mouse_pos[0] - self.board.rect.x) // 60 
-        y = (mouse_pos[1] - self.board.rect.y) //60
-
-        x *= 60
-        y *= 60
-
-        self.image.fill((0, 255, 0))
-        self.rect.x = self.board.rect.x + x
-        self.rect.y = self.board.rect.y + y
-        pygame.draw.rect(self.image, (0, 0, 0), (5, 5, 50, 50))
-
-
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)
-
-
-class Board(Sprite):
-    """
-    Represents the complete board.
-    """
     def __init__(self, pos):
-        super().__init__()
-        self.image = pygame.image.load('images/board480.png')
+        self.image_orig = pygame.image.load('images/board480.png').\
+                                 convert()
+        self.image = self.image_orig.copy()
         self.rect = self.image.get_rect()
         self.rect.x = pos[0]
         self.rect.y = pos[1]
 
-        self.squares = np.zeros((8, 8))
-
     def draw(self, surf):
         surf.blit(self.image, self.rect)
 
+    def update(self):
+        self.update_hover()
+
+    def update_hover(self):
+        mouse_pos = pygame.mouse.get_pos()
+        self.image = self.image_orig.copy()
+        if self.rect.collidepoint(mouse_pos):
+            i = (mouse_pos[0] - self.rect.x) // 60
+            j = (mouse_pos[1] - self.rect.y) // 60
+
+            x_rect =60 * i 
+            y_rect =60 * j
+
+            pygame.draw.rect(self.image, (0, 255, 0),
+                             (x_rect, y_rect, 60, 60), 3)
+
+    def ocuppied_cells(self, player1, player2):
+        occupied = player1.ocuppied_cells() +\
+                   player2.ocuppied_cells()
+        return occupied
